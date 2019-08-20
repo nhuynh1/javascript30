@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Type Ahead 👀</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <form class="search-form">
+    <input type="text" class="search" placeholder="City or State">
+    <ul class="suggestions">
+      <li>Filter for a city</li>
+      <li>or a state</li>
+    </ul>
+  </form>
+<script>
+  const endpoint = 'https://gist.githubusercontent.com/Miserlou/c5cd8364bf9b2420bb29/raw/2bf258763cdddd704f8ffd3ea9a3e81d25e2c6f6/cities.json';
+  const cities = [];
+  
+  const suggestions = document.querySelector('.suggestions');
+  const tooltip = suggestions.innerHTML;
+  
+  // get cities data from endpoint
+  fetch(endpoint)
+    .then(response => {
+      if(!response.ok)
+        throw new Error('HTTP error, status = ' + response.status);
+      return response.json();
+    })
+    .then(json => cities.push(...json));
+
+  // find matches to city or state
+  const findMatches = (wordToMatch, cities) => {
+    const regex = new RegExp(wordToMatch, 'gi');
+    return cities.filter(place => place.city.match(regex) || place.state.match(regex));
+  }
+  
+  const numberWithCommas = (x) => x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  
+  // display the matches found
+  const displayMatches = (e) => {
+    const searchTerm = e.currentTarget.value.trim();
+    const matches = (searchTerm != "") ? findMatches(searchTerm, cities) : [];
+    const regex = (searchTerm != "") ? new RegExp(searchTerm, 'gi') : undefined;
+    
+    const html = matches.reduce((html, place) => {
+      const cityName = place.city.replace(regex, `<span class="hl">${searchTerm}</span>`);
+      const stateName = place.state.replace(regex, `<span class="hl">${searchTerm}</span>`);
+      
+      return html +=  `<li>
+                          <span class="name">${cityName}, ${stateName}</span> 
+                          <span class="population">${numberWithCommas(place.population)}</span>
+                        </li>`;
+      }, '');
+    
+    suggestions.innerHTML = (html == "") ? tooltip : html;
+  }
+  
+  document.querySelector('.search').addEventListener('change', displayMatches);
+  document.querySelector('.search').addEventListener('keyup', displayMatches);
+  
+</script>
+</body>
+</html>
