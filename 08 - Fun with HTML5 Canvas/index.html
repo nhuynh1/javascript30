@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>HTML5 Canvas</title>
+</head>
+<body>
+<div class="button-group">
+  <button id="save">Save</button>
+  <button id="reset">Reset</button>
+</div>
+<canvas id="draw" width="800" height="800"></canvas>
+<script>
+  const reset = document.getElementById('reset');
+  const save = document.getElementById('save');
+  
+  const canvas = document.getElementById('draw');
+  canvas.width = window.innerWidth * 0.8;
+  canvas.height = window.innerHeight * 0.8;
+  
+  const ctx = canvas.getContext('2d');
+  ctx.strokeStyle = 'rgba(0, 200, 255, 1)';
+  ctx.lineWidth = 10;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  
+  // helper variables
+  let isDrawing = false;
+  let startX = 0, startY = 0;
+  let blue = 255, blueDirection = false;
+  let alpha = 1, alphaDirection = false;
+  
+  const draw = (e) => {
+    if (!isDrawing) return;
+    ctx.strokeStyle = `rgba(0, 200, ${blue}, ${alpha})`; // set line color
+    ctx.beginPath(); // start a new path
+    ctx.moveTo(startX, startY); // move pen to where mousedown occurred
+    ctx.lineTo(e.offsetX, e.offsetY); // draw line to where mouse currently is
+    ctx.stroke(); // render the path
+    [startX, startY] = [e.offsetX, e.offsetY]; // reset start of path to where mouse is
+    
+    // update blue and alpha variables to change color and transparency
+    blue = blueDirection ? blue + 5 : blue - 5;
+    if (blue <= 0 || blue >= 255) blueDirection = !blueDirection;
+    alpha = alphaDirection ? alpha + 0.05 : alpha - 0.05;
+    if (alpha <= 0 || alpha >= 1) alphaDirection = !alphaDirection;
+  }
+  
+  const resetCanvas = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  
+  
+  /* References: 
+    https://ourcodeworld.com/articles/read/189/how-to-create-a-file-and-generate-a-download-with-javascript-in-the-browser-without-a-server
+    
+    https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toDataURL
+  */
+  const canvasToImage = () => {
+    const link = document.createElement('a'); // create link node
+    link.href = canvas.toDataURL(); // set href to URI representing the image: something like data:image/png;base64,iVB...
+    link.download = 'drawing.png'; // set download to file name
+    link.style.display = 'none'; // set node display style to none
+    document.body.appendChild(link); // append the node, but we can't see it because style.display set to none
+    link.click(); // simulate clicking the link node
+    document.body.removeChild(link); // remove the link node
+  }
+  
+  canvas.addEventListener('mousedown', (e) => {
+    isDrawing = true;
+    [startX, startY] = [e.offsetX, e.offsetY];
+  });
+  
+  canvas.addEventListener('mousemove', draw);
+  canvas.addEventListener('mouseup', () => isDrawing = false);
+  canvas.addEventListener('mouseout', () => isDrawing = false);
+  
+  reset.addEventListener('click', resetCanvas);
+  save.addEventListener('click', canvasToImage);
+</script>
+
+<style>
+  html, body {
+    margin: 0;
+  }
+  
+  canvas {
+    border: solid 1px black;
+  }
+  
+  .button-group {
+    padding: 10px 0;
+    width: 80%;
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  .button-group > * {
+    margin: 0 10px;
+  }
+
+</style>
+
+</body>
+</html>
