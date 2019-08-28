@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Key Detection</title>
+  <script type="text/javascript" src="http://www.cornify.com/js/cornify.js"></script>
+</head>
+<body>
+  <p>To see special feature: Using the keyboard key in the sequence: ↑↑↓↓←→←→</p>
+<script>
+  /* Helper Function */
+  const isMatch = (arr1, arr2) => {
+    let i = 0, match = false;
+    if (arr1.length !== arr2.length) return false;
+    
+    while (i < arr2.length){
+      match = (arr1[i] === arr2[i]);
+      if(!match) break;
+      i++;
+    }
+    return match;
+  }
+  
+  /* Variables */
+  const keys = [];
+  const secretCode = [38, 38, 40, 40, 37, 39, 37, 39]; // keycodes for: up up down down left right left right
+  Object.freeze(secretCode); // ensure that nothing is added or deleted from secretCode array
+
+  /* Core Function */
+  const checkKeySeq = (e) => {
+    keys.push(e.keyCode);
+    const [start, deleteCount] = [-secretCode.length - 1, keys.length - secretCode.length];
+    keys.splice(start, deleteCount); // if deleteCount is negative or 0, nothing is removed
+    
+    if(isMatch(keys, secretCode)){
+      console.log('secret unicorns revealed!');
+      cornify_add();
+    }
+  }
+  
+  /* Listener */
+  window.addEventListener('keyup', checkKeySeq);
+  
+</script>
+</body>
+</html>
