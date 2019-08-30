@@ -64,11 +64,10 @@
       Make images slide in when half or more of the image would be visible.
       By default images stay in place once they become visible.
       @param {boolean} fixed; Optional
-        flag for the images to stay visible once visible
+        flag for the images to stay visible once visible, otherwise they will slide out
+        once out of view
     */
-    const slide = (...args) => {
-      const fixed = !args[0] ? true : args[0]; // defaults to true: keep images visible
-                                                 
+    const slide = (fixed = true) => {                                           
       imagesToSlide.forEach(image => {
         bottomOfViewPosition = window.scrollY + window.innerHeight;
         imageMidYPosition = image.offsetTop + image.height / 2;
@@ -88,7 +87,7 @@
       
     }
     
-    document.addEventListener('scroll', () => debounce(slide(true)));
+    document.addEventListener('scroll', () => debounce(slide(false)));
     window.addEventListener('load', () => slide()); // show any images that are already visible so we don't see blank spaces
 
   </script>
