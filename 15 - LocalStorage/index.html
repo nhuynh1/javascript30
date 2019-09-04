@@ -23,11 +23,17 @@
       <input type="text" name="item" placeholder="Item Name" required>
       <input type="submit" value="+ Add Item">
     </form>
+    <span class="update-items">
+      <a href="#" id="delete-all">delete all</a> | <a href="#" id="uncheck-all">uncheck all</a> | <a href="#" id="check-all">check all</a>
+    </span>
+    
   </div>
 
 <script>
   const addItems = document.querySelector('.add-items');
   const itemsList = document.querySelector('.plates');
+  const updateItems = document.querySelector('.update-items');
+  
   const items = JSON.parse(localStorage.getItem('items')) || [];
   
   // Create list element with checkbox
@@ -61,6 +67,16 @@
     itemsList.appendChild(nodes);
   }
   
+  // Reload list from local storage
+  const reloadList = (items = [], itemsList) => {
+    let lastItem = itemsList.lastElementChild;
+    while(lastItem){
+      itemsList.removeChild(lastItem);
+      lastItem = itemsList.lastElementChild;
+    }
+    loadList(items, itemsList);
+  }
+  
   // Save list to local storage
   const saveList = (items = []) => {
     localStorage.setItem('items', JSON.stringify(items));
@@ -87,6 +103,15 @@
     form.reset();
   }
   
+  // Delete all items
+  const deleteAll = (e) => {
+    e.preventDefault();
+    // clear items array, store items into backupItems to enable option of an undo function later on
+    const backupItems = items.splice(0, items.length); 
+    saveList();
+    reloadList(items, itemsList);
+  }
+  
   // Toggle check/unchecking of item
   const toggleDone = (e) => {
     if(!e.target.matches('input')) return; // do nothing if not input
@@ -98,8 +123,25 @@
     saveList(items);
   }
   
+  // Uncheck all items
+  // Alternatively the function can update the items array and we can reload the checkboxes using reloadList function
+  const toggleAll = (e, items = [], itemsList, check = true) => {
+    e.preventDefault();
+    const backupItems = items.map((item, indx) => {
+      item.done = check;
+      let checkbox = itemsList.querySelector(`[data-index="${indx}"]`);
+      checkbox.checked = check;
+      return item;
+    });
+    
+    saveList(items);
+  }
+  
   addItems.addEventListener('submit', addItem);
   itemsList.addEventListener('click', toggleDone);
+  (updateItems.querySelector('#delete-all')).addEventListener('click', deleteAll);
+  (updateItems.querySelector('#uncheck-all').addEventListener('click', (e) => toggleAll(e, items, itemsList, false)));
+  (updateItems.querySelector('#check-all').addEventListener('click', (e) => toggleAll(e, items, itemsList)));
   
   loadList(items, itemsList);
 </script>
