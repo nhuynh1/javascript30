@@ -53,7 +53,7 @@
   const sortBands = (bands = [], articleWords = []) => {
     const regexString = articleWords.map(word => `^${word}\\s`)
                                     .join('|');
-    const regex = new RegExp(regexString);
+    const regex = new RegExp(regexString, 'i');
     const removeArticle = (bandName = '') => bandName.replace(regex, '');
     return bands.sort((a, b) => (removeArticle(a) < removeArticle(b)) ? -1 : 1);
   }
