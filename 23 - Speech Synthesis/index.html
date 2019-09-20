@@ -56,7 +56,7 @@
       </div>
       <button id="pause">Pause</button>
       <button id="restart">Restart</button>
-      <button id="speak">Speak</button>
+      <button id="speak">Play</button>
 
     </div>
 
@@ -64,31 +64,38 @@
   let voices = [],
       startedPlay = false;
   const synth = window.speechSynthesis;
-  const voicesDropdown = document.querySelector('[name="voice"]');
-  const options = document.querySelectorAll('[type="range"]');
-  const speakButton = document.querySelector('#speak');
-  const restartButton = document.querySelector('#restart');
-  const pauseButton = document.querySelector('#pause');
+  const voicesDropdown = document.querySelector('[name="voice"]'),
+        options = document.querySelectorAll('[type="range"]'),
+        speakButton = document.querySelector('#speak'),
+        restartButton = document.querySelector('#restart'),
+        pauseButton = document.querySelector('#pause');
   
+  /* 
+    Helper function to remove all child nodes from a parentNode
+    @param {Element} parentNode
+  */
+  const clearChildren = (parentNode) => {
+    while(parentNode.lastChild){
+      parentNode.removeChild(parentNode.lastChild);
+    }
+  }
+  
+  // check if speechSynthesis is available before running
   if ("speechSynthesis" in window && "SpeechSynthesisUtterance" in window){
     const msg = new SpeechSynthesisUtterance();
     const story = document.querySelector('.story'),
-          paragraphs = [...story.querySelectorAll('p')]
-                        .filter(p => ![...p.classList].includes("skip-speech"))
-                        .reduce((string, p) => string + p.textContent + " ", "");
+          paragraphs = [...story.querySelectorAll('h2, p')]
+                        .filter(text => ![...text.classList].includes("skip-speech"))
+                        .reduce((string, text) => string + text.textContent + ", ", ""); // add commas to add pause after each text node
     msg.text = paragraphs;
     
-    const clearChildren = (parentNode) => {
-      while(parentNode.lastChild){
-        parentNode.removeChild(parentNode.lastChild);
-      }
-    }
     
     const populateVoices = (e) => {
-      // clear out options as sometimes the 'voiceschanged' event fires more than once
+      // clear out options as sometimes the 'voiceschanged' event fires more than once??
       clearChildren(voicesDropdown);
-      voices = e.currentTarget.getVoices();
-      // filter out non-English and Google voices. Google voices seem to be buggy
+//      voices = e.currentTarget.getVoices();
+      voices = synth.getVoices();
+      // filter out non-English and Google voices. Google voices seem to be buggy and stops during long text
       const fragment = voices
                         .filter(voice => voice.lang.includes("en-") && !voice.name.includes("Google"))
                         .reduce((fragment, voice) => {
@@ -104,20 +111,16 @@
     
     const restartSpeech = () => {
       synth.cancel();
-      synth.speak(msg);
+      // without setting the delay sometimes speech does not resume after pausing
+      window.setTimeout(() => synth.speak(msg), 1000);
+      startedPlay = true;
     }
     
-    const pauseSpeech = () => {
-     synth.pause();
-    }
+    const pauseSpeech = () => synth.pause();
     
     const startSpeech = () => {
-      if(!synth.paused){
-        restartSpeech();
-      }
-      else {
-        synth.resume(); // seems to be buggy, does not resume after a second restart
-      }
+      if(!startedPlay) restartSpeech();
+      else synth.resume();
     }
     
     const setOptions = (e) => {
@@ -131,16 +134,22 @@
       restartSpeech();
     }
     
-    speechSynthesis.addEventListener('voiceschanged', populateVoices);
+    populateVoices(); // for Firefox
+    if (synth.onvoiceschanged !== undefined) {
+      synth.onvoiceschanged = populateVoices;
+    }
+    
+//    synth.addEventListener('voiceschanged', populateVoices);
     options.forEach(option => option.addEventListener('change', setOptions));
     voicesDropdown.addEventListener('change', setVoice);
     speakButton.addEventListener('click', startSpeech);
     restartButton.addEventListener('click', restartSpeech);
     pauseButton.addEventListener('click', pauseSpeech);
-    
+    window.addEventListener('beforeunload', () => synth.cancel());
   }
+  // alert users and developers when speechSynthesis is not available
   else{
-    alert('Text to speech is not available on your browser');
+    alert('Text to speech is not available on your browser :(');
     console.warn('Speech Synthesis API is not available on your browser');
   }
   
