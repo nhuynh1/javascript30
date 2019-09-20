@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Speech Synthesis</title>
+  <link href='https://fonts.googleapis.com/css?family=Pacifico' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="voiceinator">
+
+      <h1>Storyteller 5000</h1>
+
+      <label for="voice">Voice:</label>
+      <select name="voice" id="voices">
+        <option value="">Select A Voice</option>
+      </select>
+
+      <label for="rate">Rate:</label>
+      <datalist id="tickmarks">
+        <option value="0" label="0"></option>
+        <option value="0.1"></option>
+        <option value="0.2"></option>
+        <option value="0.3"></option>
+        <option value="0.4"></option>
+        <option value="0.5" label = "0.5"></option>
+        <option value="0.6"></option>
+        <option value="0.7"></option>
+        <option value="0.8"></option>
+        <option value="0.9"></option>
+        <option value="1.0" label="1"></option>
+        <option value="1.1"></option>
+        <option value="1.2"></option>
+        <option value="1.3"></option>
+        <option value="1.4"></option>
+        <option value="1.5" label="1.5"></option>
+        <option value="1.6"></option>
+        <option value="1.7"></option>
+        <option value="1.8"></option>
+        <option value="1.9"></option>
+        <option value="2.0" label="2">2.0</option>
+      </datalist>
+      <input name="rate" type="range" min="0" max="2" value="1" step="0.1" list="tickmarks">
+      
+      <div class="story">
+        <h2>A Town Mouse and a Country Mouse</h2>
+        <p>A Town Mouse and a Country Mouse were friends. The Country Mouse one day invited his friend to come and see him at his home in the fields. The Town Mouse came and they sat down to a dinner of barleycorns and roots the latter of which had a distinctly earthy flavour.</p>
+
+        <p>The flavour was not much to the taste of the guest and presently he broke out with “My poor dear friend, you live here no better than the ants. Now, you should just see how I fare! My larder is a regular horn of plenty. You must come and stay with me and I promise you shall live on the fat of the land."</p>
+
+        <p>So when he returned to town he took the Country Mouse with him and showed him into a larder containing flour and oatmeal and figs and honey and dates.</p>
+
+        <p>The Country Mouse had never seen anything like it and sat down to enjoy the luxuries his friend provided. But before they had well begun, the door of the larder opened and some one came in. The two Mice scampered off and hid themselves in a narrow and exceedingly uncomfortable hole. Presently, when all was quiet, they ventured out again. But some one else came in, and off they scuttled again. This was too much for the visitor. "Good bye," said he, "I'm off. You live in the lap of luxury, I can see, but you are surrounded by dangers whereas at home I can enjoy my simple dinner of roots and corn in peace."</p>
+        <p class="skip-speech">Source: <a href="http://www.english-for-students.com/A-Town-Mouse-and-A-Country-Mouse.html">English for Students</a></p>
+      </div>
+      <button id="pause">Pause</button>
+      <button id="restart">Restart</button>
+      <button id="speak">Speak</button>
+
+    </div>
+
+<script>
+  let voices = [],
+      startedPlay = false;
+  const synth = window.speechSynthesis;
+  const voicesDropdown = document.querySelector('[name="voice"]');
+  const options = document.querySelectorAll('[type="range"]');
+  const speakButton = document.querySelector('#speak');
+  const restartButton = document.querySelector('#restart');
+  const pauseButton = document.querySelector('#pause');
+  
+  if ("speechSynthesis" in window && "SpeechSynthesisUtterance" in window){
+    const msg = new SpeechSynthesisUtterance();
+    const story = document.querySelector('.story'),
+          paragraphs = [...story.querySelectorAll('p')]
+                        .filter(p => ![...p.classList].includes("skip-speech"))
+                        .reduce((string, p) => string + p.textContent + " ", "");
+    msg.text = paragraphs;
+    
+    const clearChildren = (parentNode) => {
+      while(parentNode.lastChild){
+        parentNode.removeChild(parentNode.lastChild);
+      }
+    }
+    
+    const populateVoices = (e) => {
+      // clear out options as sometimes the 'voiceschanged' event fires more than once
+      clearChildren(voicesDropdown);
+      voices = e.currentTarget.getVoices();
+      // filter out non-English and Google voices. Google voices seem to be buggy
+      const fragment = voices
+                        .filter(voice => voice.lang.includes("en-") && !voice.name.includes("Google"))
+                        .reduce((fragment, voice) => {
+                          const option = document.createElement('option');
+                          option.value = voice.name;
+                          option.textContent = `${voice.name} (${voice.lang})`;
+                          fragment.appendChild(option);
+                          return fragment;
+                        }, document.createDocumentFragment());
+      
+      voicesDropdown.appendChild(fragment);
+    }
+    
+    const restartSpeech = () => {
+      synth.cancel();
+      synth.speak(msg);
+    }
+    
+    const pauseSpeech = () => {
+     synth.pause();
+    }
+    
+    const startSpeech = () => {
+      if(!synth.paused){
+        restartSpeech();
+      }
+      else {
+        synth.resume(); // seems to be buggy, does not resume after a second restart
+      }
+    }
+    
+    const setOptions = (e) => {
+      const optionNode = e.currentTarget;
+      msg[optionNode.name] = optionNode.value;
+      restartSpeech();
+    }
+    
+    const setVoice = (e) => {
+      msg.voice = voices.find(voice => voice.name === e.currentTarget.value);
+      restartSpeech();
+    }
+    
+    speechSynthesis.addEventListener('voiceschanged', populateVoices);
+    options.forEach(option => option.addEventListener('change', setOptions));
+    voicesDropdown.addEventListener('change', setVoice);
+    speakButton.addEventListener('click', startSpeech);
+    restartButton.addEventListener('click', restartSpeech);
+    pauseButton.addEventListener('click', pauseSpeech);
+    
+  }
+  else{
+    alert('Text to speech is not available on your browser');
+    console.warn('Speech Synthesis API is not available on your browser');
+  }
+  
+</script>
+
+</body>
+</html>
