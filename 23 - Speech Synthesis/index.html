@@ -91,9 +91,8 @@
     
     
     const populateVoices = (e) => {
-      // clear out options as sometimes the 'voiceschanged' event fires more than once??
+      // clear out options as sometimes the 'voiceschanged' event fires more than once on Chrome
       clearChildren(voicesDropdown);
-//      voices = e.currentTarget.getVoices();
       voices = synth.getVoices();
       // filter out non-English and Google voices. Google voices seem to be buggy and stops during long text
       const fragment = voices
