@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Click and Drag</title>
+</head>
+<body>
+  
+  <div class="box">
+    drag me to move
+  </div>
+  
+  <style>
+    .box {
+      width: 100px;
+      height: 100px;
+      background: red;
+      position: absolute;
+      top: 0;
+      left: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      text-align: center;
+    }
+  </style>
+  
+  <script>
+    const box = document.querySelector('.box');
+    let isDown = false,
+        start = {};
+    
+    box.addEventListener('mousedown', (e) => {
+      isDown = true;
+      e.preventDefault();
+      start.x = box.offsetLeft;
+      start.y = box.offsetTop;
+      start.pointx = e.pageX;
+      start.pointy = e.pageY;
+      
+    })
+    
+    box.addEventListener('mouseup', () => {
+      isDown = false;
+    })
+    
+    box.addEventListener('mouseleave', () => {
+      isDown = false;
+    })
+    
+    box.addEventListener('mousemove', (e) => {
+      if(!isDown) return;
+      const endx = e.pageX;
+      const endy = e.pageY;
+      
+      const walky = endy - start.pointy;
+      const walkx = endx - start.pointx;
+      const boxmovey = start.y + walky;
+      const boxmovex = start.x + walkx;
+      
+      box.style.setProperty('top', `${boxmovey}px`);
+      box.style.setProperty('left', `${boxmovex}px`);
+
+    })
+    
+  </script>
+
+  </body>
+</html>
