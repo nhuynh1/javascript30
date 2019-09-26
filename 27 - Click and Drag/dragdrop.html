@@ -5,16 +5,15 @@
   <title>Click and Drag</title>
 </head>
 <body>
-  
+  Drag the sunglasses around the page
   <div class="box">
-    drag me to move
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36"><path fill-rule="evenodd" clip-rule="evenodd" fill="#292F33" d="M1.24 11.018c.24.239 1.438.957 1.677 1.675.24.717.72 4.784 2.158 5.981 1.483 1.232 7.077.774 8.148.24 2.397-1.195 2.691-4.531 3.115-6.221.239-.957 1.677-.957 1.677-.957s1.438 0 1.678.956c.424 1.691.72 5.027 3.115 6.221 1.072.535 6.666.994 8.151-.238 1.436-1.197 1.915-5.264 2.155-5.982.238-.717 1.438-1.435 1.677-1.674.241-.239.241-1.196 0-1.436-.479-.478-6.134-.904-12.223-.239-1.215.133-1.677.478-4.554.478-2.875 0-3.339-.346-4.553-.478-6.085-.666-11.741-.24-12.221.238-.239.239-.239 1.197 0 1.436z"></path></svg>
   </div>
   
   <style>
     .box {
       width: 100px;
       height: 100px;
-      background: red;
       position: absolute;
       top: 0;
       left: 0;
@@ -24,47 +23,58 @@
       cursor: pointer;
       text-align: center;
     }
+    
+    svg {
+      width: 70px;
+      height: 70px;
+    }
+    
   </style>
   
   <script>
+    // This script will move the div, but does not appear to work with SVGs
+    // To move SVGs: http://www.petercollingridge.co.uk/tutorials/svg/interactive/dragging/
+    
     const box = document.querySelector('.box');
-    let isDown = false,
-        start = {};
+    // Learned to restructure the code from:
+    // https://javascript.info/mouse-drag-and-drop
     
-    box.addEventListener('mousedown', (e) => {
-      isDown = true;
+    box.onmousedown = (e) => {
       e.preventDefault();
-      start.x = box.offsetLeft;
-      start.y = box.offsetTop;
-      start.pointx = e.pageX;
-      start.pointy = e.pageY;
       
-    })
-    
-    box.addEventListener('mouseup', () => {
-      isDown = false;
-    })
-    
-    box.addEventListener('mouseleave', () => {
-      isDown = false;
-    })
-    
-    box.addEventListener('mousemove', (e) => {
-      if(!isDown) return;
-      const endx = e.pageX;
-      const endy = e.pageY;
+      const start = {
+        x: box.offsetLeft,
+        y: box.offsetTop,
+        pointX: e.pageX,
+        pointY: e.pageY
+      };
       
-      const walky = endy - start.pointy;
-      const walkx = endx - start.pointx;
-      const boxmovey = start.y + walky;
-      const boxmovex = start.x + walkx;
+      const moveHandler = (e) => {
+        const end = {
+          pointX: e.pageX,
+          pointY: e.pageY
+        };
+        
+        const boxmoveX = start.x + (end.pointX - start.pointX);
+        const boxmoveY = start.y + (end.pointY - start.pointY);
+        
+        box.style.setProperty('top', `${boxmoveY}px`);
+        box.style.setProperty('left', `${boxmoveX}px`);
+      }
       
-      box.style.setProperty('top', `${boxmovey}px`);
-      box.style.setProperty('left', `${boxmovex}px`);
-
-    })
+      // attach the mousemove event listener to the document after mousedown fire
+      // when the mousemove event listener was attached to the box the cursor sometimes would
+      // leave the box and the box would stop moving
+      document.addEventListener('mousemove', moveHandler);
+      
+      // remove the mousemove event listener from the document after mouseup fire
+      box.onmouseup = () => {
+        document.removeEventListener('mousemove', moveHandler);
+        box.onmouseup = null;
+      }
+    }
     
-  </script>
+</script>
 
   </body>
 </html>
