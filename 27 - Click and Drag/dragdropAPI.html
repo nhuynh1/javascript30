@@ -32,39 +32,53 @@
       top: 200px;
       width: 350px;
       height: 350px;
-      border: dashed 3px blue;
+      border: solid 3px blue;
       margin: 50px;
+      transition: all 0.3s;
+    }
+    
+    .target.active {
+      border-width: 5px;
+      border-style: dashed;
     }
   </style>
   
   <script>
-    /*
-      Dragging and dropping an element to a target.
-      To copy the element use .cloneNode(true) to create copy of the element; then append the copy
-    */
+/*
+  Dragging and dropping an element to a target.
+  To copy the element use .cloneNode(true) to create copy of the element; then append the copy
+*/
+
+const box = document.querySelector('.box');
+const target = document.querySelector('.target');
+
+box.addEventListener('dragstart', e => {
+  // set the data in the dataTransfer object to that of the box's id
+  e.dataTransfer.setData('text/plain', e.target.id);
+});
+
+target.addEventListener('dragover', e => {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+});
+
+target.addEventListener('dragenter', e => {
+  e.target.classList.add('active');
+});
     
-    const box = document.querySelector('.box');
-    const target = document.querySelector('.target');
+target.addEventListener('dragleave', e => {
+  e.target.classList.remove('active');
+})    
     
-    box.addEventListener('dragstart', e => {
-      // set the data in the dataTransfer object to that of the box's id
-      e.dataTransfer.setData('text/plain', e.target.id);
-    });
-    
-    target.addEventListener('dragover', e => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-    });
-    
-    target.addEventListener('drop', e => {
-      e.preventDefault();
-      e.target.style.backgroundColor = 'yellow';
-      
-      // grab the data in the dataTransfer object (which is the box's id)
-      // append the box to the target using the box's id
-      const data = e.dataTransfer.getData('text/plain');
-      e.target.appendChild(document.getElementById(data));
-    });  
+target.addEventListener('drop', e => {
+  e.preventDefault();
+  e.target.style.backgroundColor = 'yellow';
+
+  // grab the data in the dataTransfer object (which is the box's id)
+  // append the box to the target using the box's id
+  const data = e.dataTransfer.getData('text/plain');
+  e.target.appendChild(document.getElementById(data));
+});  
   </script>
 
   </body>
