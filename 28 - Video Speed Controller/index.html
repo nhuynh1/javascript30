@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Video Speed Scrubber</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="wrapper">
+    <video class="flex" width="765" height="430" src="http://clips.vorwaerts-gmbh.de/VfE_html5.mp4" loop controls></video>
+    <div class="speed">
+      <div class="speed-bar">1×</div>
+    </div>
+  </div>
+
+<script>
+  const video = document.querySelector('video'),
+        speedControl = document.querySelector('.speed'),
+        speedBar = document.querySelector('.speed-bar');
+  const min = 0.4,
+        max = 4;
+  
+  const updateSpeedBar = (options) => {
+    speedBar.style.height = `${options.proportion * 100}%`;
+    speedBar.textContent = `${options.speed.toFixed(2)}x`;
+  }
+  const updateVideoSpeed = ({speed}) => video.playbackRate = speed;
+  
+  speedControl.onmousedown = (e) => {
+    e.preventDefault();
+    const controlDiv = e.currentTarget;
+    
+    const getProportion = (y) => Math.min(y / controlDiv.offsetHeight, 1);
+    const getSpeed = (y) => ((max - min) * getProportion(y)) + min;
+    
+    const y = e.pageY - controlDiv.offsetTop;
+    
+    updateSpeedBar({ proportion: getProportion(y), speed: getSpeed(y) });
+    updateVideoSpeed({ speed: getSpeed(y) });
+    
+    const moveHandler = (e) => {
+      const y = e.pageY < controlDiv.offsetTop ? 0 : e.pageY - controlDiv.offsetTop,
+            proportion = getProportion(y),
+            speed = getSpeed(y);
+      updateSpeedBar({ proportion, speed });
+      updateVideoSpeed({ speed });
+    }
+    
+    document.addEventListener('mousemove', moveHandler);
+    
+    document.onmouseup = () => {
+      document.removeEventListener('mousemove', moveHandler);
+      document.onmouseup = null;
+    }
+
+  }
+</script>
+</body>
+</html>
