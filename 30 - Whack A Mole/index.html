@@ -43,33 +43,42 @@
   
   <div class="gameend">
     <div class="gameover">
-      <span onclick="closeModal()">[close]</span>
+      <span onclick="closeModal()" class="closeButton">[close]</span>
       <h1>Game Over!</h1>
       <div class="leaderboard">
+      <span id="newhighscore"></span>
       <span>Top 3 scores</span>
-        <ol class="highscores">
-<!--
-          <li></li>
-          <li></li>
-          <li></li>
--->
-        </ol>
+        <ol class="highscores"></ol>
       </div>
     </div>
   </div>
   
 
 <script>
+  /*
+    Elements from DOM
+  */
   const holes = document.querySelectorAll('.hole'),
         scoreBoard = document.querySelector('.score'),
         moles = document.querySelectorAll('.mole'),
         gameendScreen = document.querySelector('.gameend'),
-        highscoresList = document.querySelector('.highscores');
+        highscoresList = document.querySelector('.highscores'),
+        newBestScore = document.getElementById('newhighscore');
+  /*
+    Variables
+  */
   let lastHole,
       timesUp = false,
       score = 0,
       duration = 10000;
   
+  /*
+    Utility functions:
+    closeModel() closes the modal at game end
+    removeAllChildren(parent) removes all child nodes of specified parent
+    randomTime(min, max) generates random number between min and max; defaults min 200 milliseconds, max 1000 milliseconds
+    randomHole(holes) generates a random DOM element from NodeList provided
+  */
   const closeModal = () => gameendScreen.style.display = 'none';
   
   const removeAllChildren = (parent) => {
@@ -85,13 +94,19 @@
   const randomHole = (holes) => {
     const randomIndex = Math.floor(Math.random() * holes.length);
     const hole = holes[randomIndex];
-    
     // ensure hole is not the same as the previous one
     if(hole === lastHole) return randomHole(holes);
-    
     lastHole = hole;
     return hole;
   }
+  /*
+    Game functions:
+    peep() shows a mole at a random hole for a random duration
+    saveHighScores() saves top three high scores to local storage and checks if latest score is a new best score
+    showEndGameScreen() shows the endgame screen with best scores
+    startGame() starts game and flags end of game
+    updateScore() increments score if mole is actually clicked
+  */
   const peep = () => {
     const peepTime = randomTime();
     const hole = randomHole(holes);
@@ -104,18 +119,19 @@
   }
   
   const saveHighScores = () => {
-    const oldHighScores = JSON.parse(localStorage.getItem('scores')) || [];
-    const newHighScores = oldHighScores.map(n => parseInt(n))
-                                       .concat(score)
+    const oldHighScores = (JSON.parse(localStorage.getItem('scores')) || [])
+                              .map(n => parseInt(n));
+    const newHighScores = oldHighScores.concat(score)
                                        .sort((a,b) => b - a)
-                                       .filter((score, index, self) => self.indexOf(score) === index) // fiter for unique scores
+                                       .filter((score, index, self) => self.indexOf(score) === index) // filter for unique scores
                                        .slice(0, 3);
     localStorage.setItem('scores', JSON.stringify(newHighScores));
-    return newHighScores;
+    return { highScores: newHighScores, newBest: score > Math.max(...oldHighScores) };
   }
   
   const showEndGameScreen = () => {
-    const highScores = saveHighScores();
+    const { highScores, newBest } = saveHighScores();
+    
     const fragment = highScores.reduce((fragment, score) => {
       const li = document.createElement('li');
       li.textContent = score;
@@ -125,6 +141,8 @@
     
     removeAllChildren(highscoresList);
     highscoresList.appendChild(fragment);
+    newBestScore.textContent = '';
+    if(newBest) newBestScore.textContent = `wahoo! ${score} is a new best!`;
     
     gameendScreen.style.display = 'flex';
   }
@@ -141,12 +159,15 @@
   }
   
   const updateScore = (e) => {
-    if(e.isTrusted) {
+    if(e.isTrusted) { // ensures mole has been clicked by user
       score++;
       scoreBoard.textContent = score;
     }
   }
   
+  /*
+    Event listeners
+  */
   moles.forEach(mole => mole.addEventListener('click', updateScore));
 
 </script>

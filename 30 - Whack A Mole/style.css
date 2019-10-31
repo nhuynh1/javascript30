@@ -101,6 +101,13 @@ h1 {
 .gameover span, li {
   text-align: center;
   font-size: 30px;
+}
+
+.gameover span {
+  display: block;
+}
+
+.closeButton {
   cursor: pointer;
 }
 
@@ -124,4 +131,8 @@ h1 {
 
 .leaderboard {
   margin-top: 30px;
+}
+
+#newhighscore {
+  color: #ffc600;
 }
